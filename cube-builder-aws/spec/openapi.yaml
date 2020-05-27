@@ -82,6 +82,43 @@ paths:
           content:
             application/json:
               schema:
+                $ref: "#/request/schemas/raster_size"
+
+  /raster-size:
+    get:
+      tags:
+        - "cube_builder"
+      summary: "Raster Size Schemas"
+      description: "list Raster Sizes"
+      responses:
+        200:
+          description: "Successfully"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/response/schemas/Raster_schema"
+
+  /create-temporal-composition:
+    post:
+      tags:
+        - "cube_builder"
+      summary: "Create Temporal Composition"
+      description: "Create base Temporal Composition"
+      requestBody:
+        description: "Initial informations to create Temporal Composition"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/request/schemas/temporal_composition"
+      responses:
+        201:
+          description: "Successfully"
+          content:
+            application/json:
+              schema:
                 type: string
 
   /create:
@@ -107,35 +144,22 @@ paths:
                 properties:
                   cubes: 
                     type: array
-                    description: list of cubes created
+                    items:
+                      $ref: "#/response/schemas/Cube"
 
   /start:
-    get:
+    post:
       tags:
         - "cube_builder"
-      summary: "Start Process"
+      summary: "Start Cube"
       description: "Start process to generate cube"
-      parameters:
-        - in: "query"
-          name: "datacube"
-          required: true
-          description: "Cube name"
-        - in: "query"
-          name: "tiles"
-          required: true
-          description: "list of tiles"
-        - in: "query"
-          name: "start_date"
-          required: true
-          description: "start date to generate cube (format => yyyy-mm-dd)"
-        - in: "query"
-          name: "end_date"
-          required: true
-          description: "end date to generate cube (format => yyyy-mm-dd)"
-        - in: "query"
-          name: "collections"
-          required: true
-          description: "list of base collections"
+      requestBody:
+        description: "Initial informations to start Cube"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/request/schemas/start"
       responses:
         200:
           description: "Successfully"
@@ -200,6 +224,21 @@ request:
           type: number
           description: chunk size Y
 
+    temporal_composition:
+      type: object
+      required:
+        - temporal_schema
+      properties:
+        temporal_schema:
+          type: string
+          description: Schema ['A', 'M', 'S']
+        temporal_composite_t:
+          type: number
+          description: Time/Quantity
+        temporal_composite_unit:
+          type: string
+          description: Unit of quantity
+
     cube:
       type: object
       required:
@@ -243,3 +282,88 @@ request:
         oauth_scope:
           type: string
           description: oauth scope (OBT) to cube access
+
+    start:
+      type: object
+      required:
+        - url_stac
+        - bucket
+        - datacube
+        - tiles
+        - collections
+        - satellite
+        - start_date
+      properties:
+        url_stac:
+          type: string
+          description: URL STAC with input collection information
+        bucket:
+          type: string
+          description: bucket name - using to save results
+        datacube:
+          type: string
+          description: cube name
+        tiles:
+          type: array
+          description: list of tiles
+          items:
+            type: string
+        collections:
+          type: string
+          description: collection name
+        satellite:
+          type: string
+          description: satellite name (collection satellite, e.g. LANDSAT, SENTINEL-2, ...)
+        start_date:
+          type: string
+          description: start date to generate cube (format => yyyy-mm-dd)
+        last_date:
+          type: string
+          description: last date to generate cube (format => yyyy-mm-dd)
+
+response:
+  schemas:
+    Cube:
+      type: object
+      properties:
+        id:
+          type: string
+        temporal_composition_schema_id:
+          type: string
+        raster_size_schema_id:
+          type: string
+        composite_function_schema_id:
+          type: string
+        grs_schema_id:
+          type: string
+        description:
+          type: string
+        radiometric_processing:
+          type: string
+        geometry_processing:
+          type: string
+        sensor:
+          type: string
+        is_cube:
+          type: boolean
+        license:
+          type: string
+        bands_quicklook:
+          type: string
+    Raster_schema:
+      type: object
+      properties:
+        id:
+          type: string
+        raster_size_x:
+          type: number
+        raster_size_y:
+          type: number
+        raster_size_t:
+          type: number
+        chunk_size_x:
+          type: number
+        chunk_size_y:
+          type: number
+        chunk_size_t:
+          type: number
