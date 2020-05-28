@@ -28,6 +28,8 @@ paths:
         - "status"
       summary: "Status"
       description: "return status of application"
+      security:
+        - ApiKeyAuth: []
       responses:
         200:
           content:
@@ -48,6 +50,8 @@ paths:
         - "cube_builder"
       summary: "Create GRS"
       description: "Create base GRS (Geographic Reference System)"
+      security:
+        - ApiKeyAuth: []
       requestBody:
         description: "Initial informations to create GRS"
         required: true
@@ -69,6 +73,8 @@ paths:
         - "cube_builder"
       summary: "Create Raster Size Schema"
       description: "Create base Raster Size"
+      security:
+        - ApiKeyAuth: []
       requestBody:
         description: "Initial informations to create Raster Size"
         required: true
@@ -82,7 +88,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/request/schemas/raster_size"
+                type: string
 
   /raster-size:
     get:
@@ -90,6 +96,8 @@ paths:
         - "cube_builder"
       summary: "Raster Size Schemas"
       description: "list Raster Sizes"
+      security:
+        - ApiKeyAuth: []
       responses:
         200:
           description: "Successfully"
@@ -106,6 +114,8 @@ paths:
         - "cube_builder"
       summary: "Create Temporal Composition"
       description: "Create base Temporal Composition"
+      security:
+        - ApiKeyAuth: []
       requestBody:
         description: "Initial informations to create Temporal Composition"
         required: true
@@ -127,6 +137,8 @@ paths:
         - "cube_builder"
       summary: "Create Cube"
       description: "Create cube metadata"
+      security:
+        - ApiKeyAuth: []
       requestBody:
         description: "Initial informations to create Cube"
         required: true
@@ -145,7 +157,7 @@ paths:
                   cubes: 
                     type: array
                     items:
-                      $ref: "#/response/schemas/Cube"
+                      $ref: "#/response/schemas/Cube_base"
 
   /start:
     post:
@@ -153,6 +165,8 @@ paths:
         - "cube_builder"
       summary: "Start Cube"
       description: "Start process to generate cube"
+      security:
+        - ApiKeyAuth: []
       requestBody:
         description: "Initial informations to start Cube"
         required: true
@@ -167,6 +181,63 @@ paths:
             application/json:
               schema:
                 type: string
+
+  /cube-status:
+    get:
+      tags:
+        - "cube_builder"
+      summary: "Cube status"
+      description: "Return cube status and quantity of tasks executed"
+      security:
+        - ApiKeyAuth: []
+      responses:
+        200:
+          description: "Successfully"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/response/schemas/Cube_status"
+
+  /cubes:
+    get:
+      tags:
+        - "cube_builder"
+      summary: "Cubes"
+      description: "List cubes"
+      security:
+        - ApiKeyAuth: []
+      responses:
+        200:
+          description: "Successfully"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/response/schemas/Cube_list"
+
+  /cubes/{id}:
+    get:
+      tags:
+        - "cube_builder"
+      summary: "Cube Details"
+      description: "details of cube"
+      parameters:
+        - in: "path"
+          name: "id"
+          required: true
+          description: "Cube ID"
+      security:
+        - ApiKeyAuth: []
+      responses:
+        200:
+          description: "Successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/response/schemas/Cube_details"
 
 request:
   schemas:
@@ -323,7 +394,7 @@ request:
 
 response:
   schemas:
-    Cube:
+    Cube_base:
       type: object
       properties:
         id:
@@ -350,6 +421,82 @@ response:
           type: string
         bands_quicklook:
           type: string
+    Cube_list:
+      type: object
+      properties:
+        id:
+          type: string
+        temporal_composition_schema_id:
+          type: string
+        raster_size_schema_id:
+          type: string
+        composite_function_schema_id:
+          type: string
+        grs_schema_id:
+          type: string
+        description:
+          type: string
+        radiometric_processing:
+          type: string
+        geometry_processing:
+          type: string
+        sensor:
+          type: string
+        is_cube:
+          type: boolean
+        license:
+          type: string
+        bands_quicklook:
+          type: string
+        finished:
+          type: boolean
+        status:
+          type: string
+          description: (finished, pending, error)
+    Cube_details:
+      type: object
+      properties:
+        id:
+          type: string
+        temporal_composition_schema_id:
+          type: string
+        raster_size_schema_id:
+          type: string
+        composite_function_schema_id:
+          type: string
+        grs_schema_id:
+          type: string
+        description:
+          type: string
+        radiometric_processing:
+          type: string
+        geometry_processing:
+          type: string
+        sensor:
+          type: string
+        is_cube:
+          type: boolean
+        license:
+          type: string
+        bands_quicklook:
+          type: string
+        temporal:
+          type: array
+          description: start and last date of cube
+          items:
+            type: date
+        temporal_composition:
+          type: object
+          properties:
+            schema:
+              type: string
+            unit:
+              type: string
+            step:
+              type: string
+        bands:
+          type: array
+
     Raster_schema:
       type: object
       properties:
@@ -367,3 +514,29 @@ response:
           type: number
         chunk_size_t:
           type: number
+    Cube_status:
+      type: object
+      properties:
+        finished:
+          type: boolean
+        start_date:
+          type: date
+        last_date:
+          type: date
+        done:
+          type: number
+        duration:
+          type: string
+        collection_item:
+          type: number
+        not_done:
+          type: number
+        error:
+          type: number
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header        # can be "header", "query" or "cookie"
+      name: x-api-key
